@@ -109,3 +109,13 @@ class RegisterSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         result = super().to_representation(instance)
         return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
+
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        exclude_fields = self.context.get('exclude_fields', [])
+        for field in exclude_fields:
+            fields.pop(field, default=None)
+
+        return fields

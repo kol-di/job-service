@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from django.http import HttpResponseRedirect, QueryDict
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.renderers import TemplateHTMLRenderer
-from .serializers import UserSerializer, EmployeeRegisterSerializer, EmployerRegisterSerializer, RegisterSerializer
 # from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from rest_framework.authentication import TokenAuthentication
@@ -14,8 +13,9 @@ from rest_framework.reverse import reverse
 
 from itertools import chain
 
+from .serializers import UserSerializer, EmployeeRegisterSerializer, EmployerRegisterSerializer, RegisterSerializer
 from .utils import nested_dict_values
-
+from .exceptions import UnknownUserType
 
 
 User = get_user_model()
@@ -61,6 +61,8 @@ class RegisterUserAPIView(generics.CreateAPIView):
             case User.EMPLOYEE:
                 context['exclude_fields'].append('employer')
                 template_name = 'register_employee.html'
+            case _:
+                raise UnknownUserType(user_type)
 
         serializer = RegisterSerializer(context=context)
         return Response({'serializer': serializer}, template_name=template_name)
@@ -76,8 +78,17 @@ class RegisterUserAPIView(generics.CreateAPIView):
             errors = list(chain(*nested_dict_values(serializer.errors)))    # get all error strings
             request.session['errors'] = errors
             return HttpResponseRedirect(request.path)
-        # user = serializer.save()
-        return Response({'serializer': serializer}, template_name='vacancies.main_menu.html')
+        user = serializer.save()
+
+        match kwargs['user_type']:
+            case User.EMPLOYEE:
+                url = reverse('employee-menu', kwargs={'user_id': user.id})
+            case User.EMPLOYER:
+                url = reverse('employer-menu', kwargs={'user_id': user.id})
+            case _:
+                raise UnknownUserType(kwargs['user_type'])
+        return HttpResponseRedirect(url)
+        # return Response({'serializer': serializer}, template_name='vacancies.main_menu.html')
 
 
 class EmployeeRegisterView(generics.CreateAPIView):

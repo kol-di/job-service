@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework.authtoken',
     'rest_framework',
-    'users.apps.UsersConfig',
     'crispy_forms',
+    'users.apps.UsersConfig',
     'vacancies.apps.VacanciesConfig'
 ]
 

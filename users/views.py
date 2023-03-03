@@ -4,16 +4,14 @@ from rest_framework.response import Response
 from django.http import HttpResponseRedirect, QueryDict
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.renderers import TemplateHTMLRenderer
-# from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
-from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.reverse import reverse
 
 from itertools import chain
 
-from .serializers import UserSerializer, EmployeeRegisterSerializer, EmployerRegisterSerializer, RegisterSerializer
+from .serializers import UserSerializer, RegisterSerializer
 from .utils import nested_dict_values
 from .exceptions import UnknownUserType
 
@@ -25,8 +23,6 @@ User = get_user_model()
 @permission_classes([AllowAny])
 @renderer_classes([TemplateHTMLRenderer])
 def who_are_you(request):
-    # if request.user.is_active:
-    #     return Response({}, template_name='who_are_you.html')
     return Response({}, template_name='who_are_you.html')
 
 
@@ -48,11 +44,9 @@ class RegisterUserAPIView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     renderer_classes = [TemplateHTMLRenderer]
-    # template_name = 'register.html'
 
     def get(self, request, user_type):
         context = {'exclude_fields': ['user_type']}
-        # context = {'exclude_fields': []}
 
         match user_type:
             case User.EMPLOYER:
@@ -88,41 +82,3 @@ class RegisterUserAPIView(generics.CreateAPIView):
             case _:
                 raise UnknownUserType(kwargs['user_type'])
         return HttpResponseRedirect(url)
-        # return Response({'serializer': serializer}, template_name='vacancies.main_menu.html')
-
-
-class EmployeeRegisterView(generics.CreateAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = EmployeeRegisterSerializer
-
-    # model = User
-    # form_class = StudentSignUpForm
-    # template_name = 'registration/signup_form.html'
-    #
-    # def get_context_data(self, **kwargs):
-    #     kwargs['user_type'] = 'student'
-    #     return super().get_context_data(**kwargs)
-    #
-    # def form_valid(self, form):
-    #     user = form.save()
-    #     login(self.request, user)
-    #     return redirect('students:quiz_list')
-
-
-class EmployerRegisterView(generics.CreateAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = EmployerRegisterSerializer
-
-    # model = User
-    # form_class = StudentSignUpForm
-    # template_name = 'registration/signup_form.html'
-    #
-    # def get_context_data(self, **kwargs):
-    #     kwargs['user_type'] = 'student'
-    #     return super().get_context_data(**kwargs)
-    #
-    # def form_valid(self, form):
-    #     user = form.save()
-    #     login(self.request, user)
-    #     return redirect('students:quiz_list')
-

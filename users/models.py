@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 
+from .exceptions import UnknownUserType
+
 
 class MyAccountManager(BaseUserManager):
     def create_user(self, password=None, **params):
@@ -27,6 +29,8 @@ class MyAccountManager(BaseUserManager):
                     **params
                 )
                 employer.save()
+            case _:
+                raise UnknownUserType(user_type)
 
         return user
 

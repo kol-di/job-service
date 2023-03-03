@@ -1,7 +1,7 @@
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, QueryDict
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.renderers import TemplateHTMLRenderer
 from .serializers import UserSerializer, EmployeeRegisterSerializer, EmployerRegisterSerializer, RegisterSerializer
@@ -9,9 +9,15 @@ from .serializers import UserSerializer, EmployeeRegisterSerializer, EmployerReg
 from django.contrib.auth import get_user_model
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
+from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.reverse import reverse
+
+from itertools import chain
+
 
 
 User = get_user_model()
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -43,24 +49,32 @@ class RegisterUserAPIView(generics.CreateAPIView):
 
     def get(self, request, user_type):
         context = {'exclude_fields': ['user_type']}
+        # context = {'exclude_fields': []}
 
         match user_type:
             case User.EMPLOYER:
                 context['exclude_fields'].append('employee')
+                template_name = 'register_employer.html'
             case User.EMPLOYEE:
                 context['exclude_fields'].append('employer')
+                template_name = 'register_employee.html'
 
         serializer = RegisterSerializer(context=context)
-        return Response({'serializer': serializer}, template_name='register.html')
+        return Response({'serializer': serializer}, template_name=template_name)
 
     def post(self, request, *args, **kwargs):
-        print(request)
-        serializer = RegisterSerializer(data=request.data)
-        print(serializer)
+        # append user_type to the request
+        if isinstance(request.data, QueryDict):
+            request.data._mutable = True
+        request.data.update({'user_type': kwargs['user_type']})
+
+        serializer = RegisterSerializer(data=request.data, context=kwargs)
         if not serializer.is_valid():
-            return Response({'serializer': serializer}, temaplte_name='vacancies.main_,enu.html')
+            errors = list(err[0].title() for err in serializer.errors.values())
+            request.session['errors'] = errors
+            return HttpResponseRedirect(request.path)
         serializer.save()
-        return HttpResponseRedirect('google.com')
+        return Response({'serializer': serializer}, template_name='vacancies.main_menu.html')
 
 
 class EmployeeRegisterView(generics.CreateAPIView):

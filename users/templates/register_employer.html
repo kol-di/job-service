@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load rest_framework %}
+
+{% block content %}
+    <h3>Employer Register</h3>
+    <form action="{% url 'register-form' user_type=1 %}" method="post">
+        {% csrf_token %}
+        {% render_form serializer template_pack='rest_framework/vertical' %}
+        {% for error in request.session.errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+
+
+{% endblock %}

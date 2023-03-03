@@ -110,7 +110,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         result = super().to_representation(instance)
         return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
 
-
     def get_fields(self):
         fields = super().get_fields()
 

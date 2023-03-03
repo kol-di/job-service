@@ -80,16 +80,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
+        errors = {}
+
         match s := sum(1 if attrs.get(attr, None) is not None else 0 for attr in ['employee', 'employer']):
             case _ if s == 0:
-                raise serializers.ValidationError(
-                    "Specify data for some type of user.")
+                errors["request"] = "Specify data for some type of user."
             case _ if s > 1:
-                raise serializers.ValidationError(
-                    "Can't specify data for more than one type of users.")
+                errors["request"] = "Can't specify data for more than one type of users."
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError(
-                {"password": "Password fields didn't match."})
+            errors["password"] = "Password fields didn't match."
+        if errors:
+            raise serializers.ValidationError(errors)
+
         return attrs
 
     def create(self, validated_data):

@@ -14,6 +14,8 @@ from rest_framework.reverse import reverse
 
 from itertools import chain
 
+from .utils import nested_dict_values
+
 
 
 User = get_user_model()
@@ -34,6 +36,7 @@ class UserDetailAPI(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request, *args, **kwargs):
+        print(request.user)
         user = User.objects.get(id=request.user.id)
         serializer = UserSerializer(user)
         return Response(serializer.data)
@@ -70,10 +73,10 @@ class RegisterUserAPIView(generics.CreateAPIView):
 
         serializer = RegisterSerializer(data=request.data, context=kwargs)
         if not serializer.is_valid():
-            errors = list(err[0].title() for err in serializer.errors.values())
+            errors = list(chain(*nested_dict_values(serializer.errors)))    # get all error strings
             request.session['errors'] = errors
             return HttpResponseRedirect(request.path)
-        serializer.save()
+        # user = serializer.save()
         return Response({'serializer': serializer}, template_name='vacancies.main_menu.html')
 
 

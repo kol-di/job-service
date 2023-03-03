@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h3>Who are you?</h3>
+  <form action="{% url 'register-form' user_type=1 %}" method="get">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit" class="btn btn-success">Employer</button>
+  </form>
+  <form action="{% url 'register-form' user_type=2 %}" method="get">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit" class="btn btn-success">Employee</button>
+  </form>
+
+{% endblock %}

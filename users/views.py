@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from rest_framework.reverse import reverse
+from rest_framework.authtoken.models import Token
 
 from itertools import chain
 
@@ -81,4 +82,6 @@ class RegisterUserAPIView(generics.CreateAPIView):
                 url = reverse('employer-menu', kwargs={'user_id': user.id})
             case _:
                 raise UnknownUserType(kwargs['user_type'])
-        return HttpResponseRedirect(url)
+        token = Token.objects.get_or_create(user=user)[0]
+
+        return HttpResponseRedirect(url, headers={'Authorization': f'Token {token.key}'})

@@ -100,7 +100,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             if validated_data.get(entity, None) is not None:
                 entity_kwargs = validated_data.pop(entity)
                 break
-        print(validated_data)
         user = User.objects.create_user(
             **validated_data,
             **entity_kwargs

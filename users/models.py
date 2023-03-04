@@ -6,31 +6,17 @@ from .exceptions import UnknownUserType
 
 class MyAccountManager(BaseUserManager):
     def create_user(self, password=None, **params):
-        email = params.pop('email')
-        user_type = params.pop('user_type')
-
-        user = self.model(
-            email=self.normalize_email(email),
-            user_type=user_type
-        )
-        user.set_password(password)
-        user.save(using=self._db)
+        user_type = params['user_type']
 
         match user_type:
             case self.model.EMPLOYEE:
-                employee = Employee(
-                    user=user,
-                    **params
-                )
-                employee.save()
+                user = Employee(**params)
             case self.model.EMPLOYER:
-                employer = Employer(
-                    user=user,
-                    **params
-                )
-                employer.save()
+                user = Employer(**params)
             case _:
                 raise UnknownUserType(user_type)
+        user.set_password(password)
+        user.save(using=self._db)
 
         return user
 
@@ -69,18 +55,22 @@ class User(AbstractBaseUser):
         return str(self.email)
 
 
-class Employee(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+class Employee(User):
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
     middle_name = models.CharField(max_length=30, blank=True)
     about = models.TextField(max_length=500, blank=True)
     experience = models.TextField(max_length=500, blank=True)
 
+    class Meta:
+        permissions = (('employee', 'Is employee'),)
 
-class Employer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+
+class Employer(User):
     name = models.CharField(max_length=50, blank=False)
     employee_cnt = models.PositiveIntegerField(blank=True, null=True)
     address = models.TextField(max_length=50, blank=True)
     about = models.TextField(max_length=500, blank=True)
+
+    class Meta:
+        permissions = (('employer', 'Is employer'),)
